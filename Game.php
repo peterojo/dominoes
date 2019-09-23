@@ -6,7 +6,7 @@ require 'autoload.php';
 use Dominos\Artifact\Player;
 use Dominos\Artifact\Tile;
 
-class Dominos
+class Game
 {
     public $board = [];
     public $deck = [];
@@ -35,33 +35,27 @@ class Dominos
         $this->players[] = $player;
     }
 
-    public function drawTilesFromDeck(int $number): array
+    public function visitBoneyard()
     {
-        print "Drawing {$number} tiles from deck.\n";
         if (0 === count($this->deck)) {
-            exit("Game Over! No more tiles.");
+            exit("No more tiles in Boneyard. Game ends.\n");
         }
-        return array_splice($this->deck, 0, $number);
+
+        return array_shift($this->deck);
     }
 
     public function placeTileOnBoard(Tile $tile, string $position): void
     {
         if (!$this->isValid($tile, $position)) {
-            throw new \Exception("Invalid tile");
+            print "You're not allowed to do that!\n";
+            exit(1);
         }
 
         $position === 'right' ? array_push($this->board, $tile) : array_unshift($this->board, $tile);
-
-        print 'Board is now: '.$this->showTilesShallow($this->board)."\n";
     }
 
     private function isValid(Tile $tile, $position): bool
     {
-        if (0 === count($this->board)) {
-            return true;
-        }
-
-        print "Checking whether tile is allowed on {$position} of board.\n";
         if ('right' === $position) {
             $last = end($this->board);
 
@@ -78,15 +72,16 @@ class Dominos
     public function play()
     {
         while (!$this->isOver()) {
-            $player = next($this->players) ?: reset($this->players);
+            $player = current($this->players);
             $player->play($this);
+            next($this->players) ?: reset($this->players);
         }
     }
 
     public function isOver()
     {
         if (empty($this->deck)) {
-            print "No more tiles in Boneyard.\n";
+            print "No more tiles in Boneyard. Game ends.\n";
             return true;
         }
 
@@ -98,28 +93,30 @@ class Dominos
         }
     }
 
-    private function showTilesShallow($tiles)
+    public function displayTiles($tiles)
     {
-        $numbers = [];
+        $display = '';
         foreach ($tiles as $tile) {
-            $numbers[] = $tile->numbers;
+            $display .= $tile->display();
         }
 
-        return json_encode($numbers);
+        return $display;
     }
 }
-$game = new Dominos();
+
+$game = new Game();
 
 $game->initialize();
 
 $game->registerPlayer(
-    new Player('Donald Trump', $game->drawTilesFromDeck(7))
+    new Player('Donald Trump', array_splice($game->deck, 0, 7))
 );
 $game->registerPlayer(
-    new Player('Xi Jinping', $game->drawTilesFromDeck(7))
+    new Player('Xi Jinping', array_splice($game->deck, 0, 7))
 );
 
  /* Pick next tile from shuffled deck to start */
 $game->board = array_splice($game->deck, 0, 1);
+$game->displayTiles($game->board);
 
 $game->play();

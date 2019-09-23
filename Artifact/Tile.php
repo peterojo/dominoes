@@ -17,19 +17,29 @@ class Tile
         return in_array($number, $this->numbers);
     }
 
-    public function suitablePosition($left, $right)
+    public function isSuitableToPlay($leftEdge, $rightEdge)
     {
-        if (!$this->has($left) && !$this->has($right)) {
-            throw new \Exception("This tile does not match any of the edge numbers.\n");
+        return $this->has($leftEdge) || $this->has($rightEdge);
+    }
+
+    public function suitablePosition($leftEdge, $rightEdge)
+    {
+        if (!$this->isSuitableToPlay($leftEdge, $rightEdge)) {
+            throw new \Exception("This tile matches neither of the edge numbers on the board.\n");
         }
 
-        if (reset($this->numbers) === $right) {
+        if (reset($this->numbers) === $rightEdge) {
             return 'right';
-        } elseif (end($this->numbers) === $left) {
+        } elseif (end($this->numbers) === $leftEdge) {
             return 'left';
         } else {
             $this->numbers = array_reverse($this->numbers);
-            return $this->suitablePosition($left, $right);
+            return $this->suitablePosition($leftEdge, $rightEdge);
         }
+    }
+
+    public function display()
+    {
+        return '[' . $this->numbers[0] . ':' . $this->numbers[1] . ']';
     }
 }

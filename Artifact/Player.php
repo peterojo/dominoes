@@ -2,7 +2,7 @@
 
 namespace Dominos\Artifact;
 
-use Dominos\Dominos;
+use Dominos\Game;
 
 class Player
 {
@@ -15,66 +15,59 @@ class Player
         $this->tiles = $tiles;
     }
 
-    public function play (Dominos $game)
+    public function play (Game $game)
     {
-        print "The board is ".$this->showTilesShallow($game->board)."\n";
         print "It is {$this->name}'s turn\n";
-        list($left, $right) = $this->findEdgeNumbersOnBoard($game->board);
-        print "{$this->name} has: ".$this->showTilesShallow($this->tiles)."\n";
-        $validTile = $this->findSuitableTile($game, $left, $right);
+        list($leftEdge, $rightEdge) = $this->getEdgesOfTheBoard($game->board);
+        print "{$this->name} has: ".$game->displayTiles($this->tiles)."\n";
+        $suitableTile = $this->findSuitableTile($game, $leftEdge, $rightEdge);
 
-        $position = $validTile->suitablePosition($left, $right);
-        print "{$this->name} plays ".json_encode($validTile->numbers)." on the {$position} side\n";
+        $position = $suitableTile->suitablePosition($leftEdge, $rightEdge);
+        print "{$this->name} plays " . $suitableTile->display() . " on the {$position} side\n";
 
-        $game->placeTileOnBoard($validTile, $position);
+        $game->placeTileOnBoard($suitableTile, $position);
+        print "The board is: ".$game->displayTiles($game->board)."\n";
     }
 
-    private function findSuitableTile(Dominos $game, $left, $right): Tile
+    private function findSuitableTile(Game $game, $leftEdge, $rightEdge)
     {
-        print "{$this->name} is now searching for a valid tile to play\n";
-
-        $validTiles = array_filter($this->tiles, function (Tile $tile) use ($left, $right) {
-            return $tile->has($left) || $tile->has($right);
+        $suitableTiles = array_filter($this->tiles, function (Tile $tile) use ($leftEdge, $rightEdge) {
+            return $tile->isSuitableToPlay($leftEdge, $rightEdge);
         });
 
-        if (empty($validTiles) && !$game->isOver()) {
-            print "{$this->name} is picking a new tile from the deck.\n";
-            $this->tiles[] = reset($game->drawTilesFromDeck(1));
-            print "{$this->name} now has: ".$this->showTilesShallow($this->tiles)."\n";
+        if (empty($suitableTiles)) {
+            print "{$this->name} has to reach for the boneyard.\n";
 
-            return $this->findSuitableTile($game, $left, $right);
+            if ($newPickedTile = $game->visitBoneyard()) {
+                $this->tiles[] = $newPickedTile;
+                print "{$this->name} now has: ".$game->displayTiles($this->tiles)."\n";
+            }
+
+            return $this->findSuitableTile($game, $leftEdge, $rightEdge);
         }
 
-        $tile = reset($validTiles);
-
-        $this->tiles = array_filter($this->tiles, function ($item) use ($tile) {
-            return $item->numbers !== $tile->numbers;
-        });
-
-        return reset($validTiles);
+        return $this->giveUpTile(reset($suitableTiles));
     }
 
-    private function findEdgeNumbersOnBoard(array $board): array
+    private function getEdgesOfTheBoard(array $board): array
     {
-        $firstTile = reset($board);
-        $lastTile = end($board);
+        $leftTile = reset($board);
+        $rightTile = end($board);
 
-        print "Edges of board are ".json_encode([reset($firstTile->numbers), end($lastTile->numbers)])."\n";
-        return [reset($firstTile->numbers), end($lastTile->numbers)];
-    }
-
-    private function showTilesShallow($tiles)
-    {
-        $numbers = [];
-        foreach ($tiles as $tile) {
-            $numbers[] = $tile->numbers;
-        }
-
-        return json_encode($numbers);
+        return [reset($leftTile->numbers), end($rightTile->numbers)];
     }
 
     public function hasWon()
     {
         return empty($this->tiles);
+    }
+
+    private function giveUpTile(Tile $tile)
+    {
+        $this->tiles = array_filter($this->tiles, function ($item) use ($tile) {
+            return $item->numbers !== $tile->numbers;
+        });
+
+        return $tile;
     }
 }
