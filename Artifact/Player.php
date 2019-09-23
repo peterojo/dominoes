@@ -18,14 +18,15 @@ class Player
     public function play (Game $game)
     {
         print "It is {$this->name}'s turn\n";
-        list($leftEdge, $rightEdge) = $this->getEdgesOfTheBoard($game->board);
         print "{$this->name} has: ".$game->displayTiles($this->tiles)."\n";
-        $suitableTile = $this->findSuitableTile($game, $leftEdge, $rightEdge);
 
-        $position = $suitableTile->suitablePosition($leftEdge, $rightEdge);
-        print "{$this->name} plays " . $suitableTile->display() . " on the {$position} side\n";
+        list($leftEdge, $rightEdge) = $game->getEdgesOfTheBoard();
+        $tile = $this->findSuitableTile($game, $leftEdge, $rightEdge);
+        $position = $tile->suitablePosition($leftEdge, $rightEdge);
 
-        $game->placeTileOnBoard($suitableTile, $position);
+        print "{$this->name} plays " . $tile->display() . " on the {$position} side\n";
+
+        $game->placeTileOnBoard($tile, $position);
         print "The board is: ".$game->displayTiles($game->board)."\n";
     }
 
@@ -47,14 +48,6 @@ class Player
         }
 
         return $this->giveUpTile(reset($suitableTiles));
-    }
-
-    private function getEdgesOfTheBoard(array $board): array
-    {
-        $leftTile = reset($board);
-        $rightTile = end($board);
-
-        return [reset($leftTile->numbers), end($rightTile->numbers)];
     }
 
     public function hasWon()

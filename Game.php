@@ -35,18 +35,28 @@ class Game
         $this->players[] = $player;
     }
 
-    public function visitBoneyard()
+    public function play()
     {
-        if (0 === count($this->deck)) {
-            exit("No more tiles in Boneyard. Game ends.\n");
+        while (!$this->isOver()) {
+            $player = current($this->players);
+            $player->play($this);
+            next($this->players) ?: reset($this->players);
+        }
+    }
+
+    public function displayTiles($tiles)
+    {
+        $display = '';
+        foreach ($tiles as $tile) {
+            $display .= $tile->display();
         }
 
-        return array_shift($this->deck);
+        return $display;
     }
 
     public function placeTileOnBoard(Tile $tile, string $position): void
     {
-        if (!$this->isValid($tile, $position)) {
+        if (!$this->isValidTilePlacement($tile, $position)) {
             print "You're not allowed to do that!\n";
             exit(1);
         }
@@ -54,7 +64,7 @@ class Game
         $position === 'right' ? array_push($this->board, $tile) : array_unshift($this->board, $tile);
     }
 
-    private function isValid(Tile $tile, $position): bool
+    private function isValidTilePlacement(Tile $tile, $position): bool
     {
         if ('right' === $position) {
             $last = end($this->board);
@@ -67,15 +77,6 @@ class Game
         }
 
         return false;
-    }
-
-    public function play()
-    {
-        while (!$this->isOver()) {
-            $player = current($this->players);
-            $player->play($this);
-            next($this->players) ?: reset($this->players);
-        }
     }
 
     public function isOver()
@@ -93,14 +94,21 @@ class Game
         }
     }
 
-    public function displayTiles($tiles)
+    public function getEdgesOfTheBoard(): array
     {
-        $display = '';
-        foreach ($tiles as $tile) {
-            $display .= $tile->display();
+        $leftTile = reset($this->board);
+        $rightTile = end($this->board);
+
+        return [reset($leftTile->numbers), end($rightTile->numbers)];
+    }
+
+    public function visitBoneyard()
+    {
+        if (0 === count($this->deck)) {
+            exit("No more tiles in Boneyard. Game ends.\n");
         }
 
-        return $display;
+        return array_shift($this->deck);
     }
 }
 
@@ -117,6 +125,6 @@ $game->registerPlayer(
 
  /* Pick next tile from shuffled deck to start */
 $game->board = array_splice($game->deck, 0, 1);
-$game->displayTiles($game->board);
+print "The board is: ".$game->displayTiles($game->board)."\n";
 
 $game->play();
