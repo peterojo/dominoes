@@ -17,12 +17,12 @@ class Tile
         return in_array($number, $this->numbers);
     }
 
-    public function isSuitableToPlay($leftEdge, $rightEdge)
+    public function isSuitableToPlay($leftEdge, $rightEdge): bool
     {
         return $this->has($leftEdge) || $this->has($rightEdge);
     }
 
-    public function suitablePosition($leftEdge, $rightEdge)
+    public function suitablePosition($leftEdge, $rightEdge): string
     {
         if (!$this->isSuitableToPlay($leftEdge, $rightEdge)) {
             throw new \Exception("This tile matches neither of the edge numbers on the board.\n");
@@ -38,7 +38,7 @@ class Tile
         }
     }
 
-    public function display()
+    public function display(): string
     {
         return '[' . $this->numbers[0] . ':' . $this->numbers[1] . ']';
     }

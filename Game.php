@@ -1,7 +1,6 @@
 <?php
 
 namespace Dominos;
-require 'autoload.php';
 
 use Dominos\Artifact\Player;
 use Dominos\Artifact\Tile;
@@ -35,7 +34,7 @@ class Game
         $this->players[] = $player;
     }
 
-    public function play()
+    public function play(): void
     {
         while (!$this->isOver()) {
             $player = current($this->players);
@@ -44,14 +43,12 @@ class Game
         }
     }
 
-    public function displayTiles($tiles)
+    public function getEdgesOfTheBoard(): array
     {
-        $display = '';
-        foreach ($tiles as $tile) {
-            $display .= $tile->display();
-        }
+        $leftTile = reset($this->board);
+        $rightTile = end($this->board);
 
-        return $display;
+        return [ reset($leftTile->numbers), end($rightTile->numbers) ];
     }
 
     public function placeTileOnBoard(Tile $tile, string $position): void
@@ -64,45 +61,7 @@ class Game
         $position === 'right' ? array_push($this->board, $tile) : array_unshift($this->board, $tile);
     }
 
-    private function isValidTilePlacement(Tile $tile, $position): bool
-    {
-        if ('right' === $position) {
-            $last = end($this->board);
-
-            return end($last->numbers) === reset($tile->numbers);
-        } elseif ('left' === $position) {
-            $first = reset($this->board);
-
-            return end($tile->numbers) === reset($first->numbers);
-        }
-
-        return false;
-    }
-
-    public function isOver()
-    {
-        if (empty($this->deck)) {
-            print "No more tiles in Boneyard. Game ends.\n";
-            return true;
-        }
-
-        foreach ($this->players as $player) {
-            if ($player->hasWon()) {
-                print "DOMINO!!! {$player->name} won!\n";
-                return true;
-            }
-        }
-    }
-
-    public function getEdgesOfTheBoard(): array
-    {
-        $leftTile = reset($this->board);
-        $rightTile = end($this->board);
-
-        return [reset($leftTile->numbers), end($rightTile->numbers)];
-    }
-
-    public function visitBoneyard()
+    public function visitBoneyard(): Tile
     {
         if (0 === count($this->deck)) {
             exit("No more tiles in Boneyard. Game ends.\n");
@@ -110,21 +69,48 @@ class Game
 
         return array_shift($this->deck);
     }
+
+    public function displayTiles($tiles = null): string
+    {
+        $tiles = $tiles ?? $this->board;
+        $display = '';
+        foreach ($tiles as $tile) {
+            $display .= $tile->display();
+        }
+
+        return $display;
+    }
+
+    private function isValidTilePlacement(Tile $tile, $position): bool
+    {
+        if ('right' === $position) {
+            $rightEdgeTile = end($this->board);
+
+            return end($rightEdgeTile->numbers) === reset($tile->numbers);
+        } elseif ('left' === $position) {
+            $leftEdgeTile = reset($this->board);
+
+            return end($tile->numbers) === reset($leftEdgeTile->numbers);
+        }
+
+        return false;
+    }
+
+    public function isOver(): bool
+    {
+        if (empty($this->deck)) {
+            print "No more tiles in Boneyard. Game ends.\n";
+            return true;
+        }
+
+        foreach ($this->players as $player) {
+            if ($player->wins()) {
+                print "DOMINO!!! {$player->name} wins!\n";
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
 
-$game = new Game();
-
-$game->initialize();
-
-$game->registerPlayer(
-    new Player('Donald Trump', array_splice($game->deck, 0, 7))
-);
-$game->registerPlayer(
-    new Player('Xi Jinping', array_splice($game->deck, 0, 7))
-);
-
- /* Pick next tile from shuffled deck to start */
-$game->board = array_splice($game->deck, 0, 1);
-print "The board is: ".$game->displayTiles($game->board)."\n";
-
-$game->play();

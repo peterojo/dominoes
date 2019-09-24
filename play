@@ -1,0 +1,24 @@
+#!/usr/bin/env php
+<?php
+
+require __DIR__ . DIRECTORY_SEPARATOR . 'autoload.php';
+
+use Dominos\Artifact\Player;
+use Dominos\Game;
+
+$game = new Game();
+
+$game->initialize();
+
+$game->registerPlayer(
+    new Player('Donald Trump', array_splice($game->deck, 0, 7))
+);
+$game->registerPlayer(
+    new Player('Xi Jinping', array_splice($game->deck, 0, 7))
+);
+
+/* Pick next tile from shuffled deck to start */
+$game->board = array_splice($game->deck, 0, 1);
+print "The board is: ".$game->displayTiles()."\n";
+
+$game->play();
