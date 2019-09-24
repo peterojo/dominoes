@@ -3,8 +3,8 @@
 
 require __DIR__ . DIRECTORY_SEPARATOR . 'autoload.php';
 
-use Dominos\Artifact\Player;
-use Dominos\Game;
+use Dominoes\Artifact\Player;
+use Dominoes\Game;
 
 $game = new Game();
 

@@ -1,9 +1,9 @@
 <?php
 
-namespace Dominos;
+namespace Dominoes;
 
-use Dominos\Artifact\Player;
-use Dominos\Artifact\Tile;
+use Dominoes\Artifact\Player;
+use Dominoes\Artifact\Tile;
 
 class Game
 {

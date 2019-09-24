@@ -1,6 +1,6 @@
 <?php
 
-namespace Dominos\Artifact;
+namespace Dominoes\Artifact;
 
 class Tile
 {
